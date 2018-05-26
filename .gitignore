@@ -1,3 +1,5 @@
+*.xls
 *.csv
 *.idea
 *.pyc
+*.7z

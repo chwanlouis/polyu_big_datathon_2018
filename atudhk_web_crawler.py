@@ -64,7 +64,7 @@ class ATUHKRecordIDCrawler(object):
         return str(response.data)
 
     @staticmethod
-    def souping(text: str):
+    def record_id_souping(text: str):
         record = list()
         soup = BeautifulSoup(text, 'lxml')
         soup = soup.find_all({'table': {'class': 'data', 'style': 'font-size:11px;'}})
@@ -79,34 +79,59 @@ class ATUHKRecordIDCrawler(object):
                 data_row = dict()
                 record_id = str(row_array[0].get_text())
                 # banding = row_array[1].get_text()
-                # english = row_array[2].get_text()
-                # chinese = row_array[3].get_text()
-                # maths = row_array[4].get_text()
-                # liberal_studies = row_array[5].get_text()
-                # electives = row_array[6].get_text()
+                english = row_array[2].get_text()
+                chinese = row_array[3].get_text()
+                maths = row_array[4].get_text()
+                liberal_studies = row_array[5].get_text()
+                electives = row_array[6].find_all('div', {'class': 'electives'})
+                if len(electives) == 1:
+                    elective1_sub = electives[0].find_all('div', {'class': 'electives-subj'})[0].get_text()
+                    elective1_grade = electives[0].find_all('div', {'class': 'electives-grade'})[0].get_text()
+                    elective2_sub = None
+                    elective2_grade = None
+                else:
+                    elective1_sub = electives[0].find_all('div', {'class': 'electives-subj'})[0].get_text()
+                    elective1_grade = electives[0].find_all('div', {'class': 'electives-grade'})[0].get_text()
+                    elective2_sub = electives[1].find_all('div', {'class': 'electives-subj'})[0].get_text()
+                    elective2_grade = electives[1].find_all('div', {'class': 'electives-grade'})[0].get_text()
                 best_five = str(row_array[7].get_text())
-                # print(record_id, banding, english, chinese, maths, liberal_studies, best_five)
+                # print(record_id, english, chinese, maths, liberal_studies, electives, best_five)
+                # print(electives)
                 data_row['RECORD_ID'] = record_id
                 data_row['BEST_FIVE'] = best_five
+                data_row['CHINESE'] = chinese
+                data_row['ENGLISH'] = english
+                data_row['MATHS'] = maths
+                data_row['LIBERAL_STUDIES'] = liberal_studies
+                data_row['ELECT_SUB_1'] = elective1_sub
+                data_row['ELECT_SUB_2'] = elective2_sub
+                data_row['ELECT_GRADE_1'] = elective1_grade
+                data_row['ELECT_GRADE_2'] = elective2_grade
                 # print(row_array)
                 record.append(data_row)
         # print(len(table))
         return record
 
     def main(self):
-        colnames_order = ['YEAR', 'CODE', 'RECORD_ID', 'BEST_FIVE']
-        all_df = list()
+        colnames_order = [
+            'YEAR', 'CODE', 'RECORD_ID', 'BEST_FIVE', 'CHINESE', 'ENGLISH', 'MATHS',
+            'LIBERAL_STUDIES', 'ELECT_SUB_1', 'ELECT_SUB_2', 'ELECT_GRADE_1', 'ELECT_GRADE_2'
+        ]
+        record_df = list()
         for data in self.df.to_dict('record'):
+            # if data['YEAR'] == 2012:
+            #     continue
             print('getting ... year = %s, code = %s' % (data['YEAR'], data['CODE']))
             text = self.get_record_webpage(year=data['YEAR'], code=data['CODE'])
-            record = self.souping(text)
+            record = self.record_id_souping(text)
             if record is None:
                 continue
             df = pd.DataFrame(record)
             df['YEAR'] = [data['YEAR'] for _ in range(len(df))]
             df['CODE'] = [data['CODE'] for _ in range(len(df))]
-            all_df.append(df)
-        return pd.concat(all_df)
+            record_df.append(df)
+            # print(df)
+        return pd.concat(record_df)[colnames_order]
 
 
 if __name__ == '__main__':

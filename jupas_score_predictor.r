@@ -102,5 +102,5 @@ Y_max_min_hat_2018_df <- as.data.table(cbind(
   Y_max_min_hat_2018, dataset_X_predict_2018[, .(Year+1, JS_Code, REMARKS)]))
 colnames(Y_max_min_hat_2018_df) <- c("Maximum", "Minimum", "Year", 
                                 colnames(Y_max_min_hat_2018_df)[-(1:3)])
-fwrite(Y_max_min_ hat_2018_df, "submission/jupas_prediction_2018.csv")
+fwrite(Y_max_min_hat_2018_df, "submission/jupas_prediction_2018.csv")
 
